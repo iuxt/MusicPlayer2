@@ -30,6 +30,8 @@ jobs:
           "--add", "Microsoft.VisualStudio.Component.VC.14.29.16.11.MFC"
       - name: 设置 msbuild
         uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '[17.0,18.0)'
       - name: 编译
         run: msbuild -t:Build '-p:Configuration=Release;platform=x64' -m:4
       - name: 复制文件到 Release 文件夹
@@ -73,6 +75,8 @@ jobs:
           "--add", "Microsoft.VisualStudio.Component.VC.14.29.16.11.MFC"
       - name: 设置 msbuild
         uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '[17.0,18.0)'
       - name: 编译
         run: msbuild -t:Build '-p:Configuration=Release;platform=x86' -m:4
       - name: 复制文件到 Release 文件夹
