@@ -256,7 +256,7 @@ void CPlayListCtrl::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
     switch (lplvdr->nmcd.dwDrawStage)	//判断状态
     {
     case CDDS_PREPAINT:
-        *pResult = CDRF_NOTIFYITEMDRAW;
+        *pResult = CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
         break;
     case CDDS_ITEMPREPAINT:			//如果为画ITEM之前就要进行颜色的改变
         if (IsWindowEnabled())
@@ -350,6 +350,9 @@ void CPlayListCtrl::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
         if (this_item_select)
             SetItemState(nmcd.dwItemSpec, 0xFF, LVIS_SELECTED);
         //*pResult = CDRF_DODEFAULT;
+        break;
+    case CDDS_POSTPAINT:
+        FillEmptyListArea(CDC::FromHandle(nmcd.hdc));
         break;
     }
 }

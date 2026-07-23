@@ -6,6 +6,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LIST_CTRL_SOURCE_PATH = PROJECT_ROOT / "MusicPlayer2" / "ListCtrlEx.cpp"
 LIST_CTRL_HEADER_PATH = PROJECT_ROOT / "MusicPlayer2" / "ListCtrlEx.h"
+PLAYLIST_SOURCE_PATH = PROJECT_ROOT / "MusicPlayer2" / "PlayListCtrl.cpp"
 
 
 def extract_function(source: str, signature: str) -> str:
@@ -29,6 +30,9 @@ class PlaylistRepaintContractTest(unittest.TestCase):
             encoding="utf-8-sig"
         )
         cls.list_ctrl_header = LIST_CTRL_HEADER_PATH.read_text(
+            encoding="utf-8-sig"
+        )
+        cls.playlist_source = PLAYLIST_SOURCE_PATH.read_text(
             encoding="utf-8-sig"
         )
 
@@ -102,6 +106,28 @@ class PlaylistRepaintContractTest(unittest.TestCase):
                 r"empty_rect\.bottom\s*\);.*"
                 r"FillSolidRect\(empty_rect,\s*m_background_color\);",
                 re.DOTALL,
+            ),
+        )
+
+    def test_playlist_requests_and_handles_control_postpaint(self):
+        custom_draw_body = extract_function(
+            self.playlist_source,
+            "void CPlayListCtrl::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)",
+        )
+        self.assertRegex(
+            custom_draw_body,
+            re.compile(
+                r"case CDDS_PREPAINT:\s*"
+                r"\*pResult = CDRF_NOTIFYITEMDRAW\s*\|\s*"
+                r"CDRF_NOTIFYPOSTPAINT;"
+            ),
+        )
+        self.assertRegex(
+            custom_draw_body,
+            re.compile(
+                r"case CDDS_POSTPAINT:\s*"
+                r"FillEmptyListArea\(CDC::FromHandle\(nmcd\.hdc\)\);\s*"
+                r"break;"
             ),
         )
 
