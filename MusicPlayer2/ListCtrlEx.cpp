@@ -214,6 +214,7 @@ void CListCtrlEx::SetListData(ListData* pListData)
         return;
     m_pListData = pListData;
     SetItemCount(pListData->size());
+    Invalidate(FALSE);
 }
 
 void CListCtrlEx::SetListData(const ListData & list_data)
