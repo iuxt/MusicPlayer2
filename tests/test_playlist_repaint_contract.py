@@ -3,9 +3,9 @@ import unittest
 from pathlib import Path
 
 
-SOURCE_PATH = (
-    Path(__file__).resolve().parents[1] / "MusicPlayer2" / "ListCtrlEx.cpp"
-)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+LIST_CTRL_SOURCE_PATH = PROJECT_ROOT / "MusicPlayer2" / "ListCtrlEx.cpp"
+LIST_CTRL_HEADER_PATH = PROJECT_ROOT / "MusicPlayer2" / "ListCtrlEx.h"
 
 
 def extract_function(source: str, signature: str) -> str:
@@ -25,11 +25,16 @@ def extract_function(source: str, signature: str) -> str:
 class PlaylistRepaintContractTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.source = SOURCE_PATH.read_text(encoding="utf-8-sig")
+        cls.list_ctrl_source = LIST_CTRL_SOURCE_PATH.read_text(
+            encoding="utf-8-sig"
+        )
+        cls.list_ctrl_header = LIST_CTRL_HEADER_PATH.read_text(
+            encoding="utf-8-sig"
+        )
 
     def test_virtual_list_data_update_invalidates_without_background_erase(self):
         set_data_body = extract_function(
-            self.source,
+            self.list_ctrl_source,
             "void CListCtrlEx::SetListData(ListData* pListData)",
         )
         self.assertRegex(
@@ -41,7 +46,7 @@ class PlaylistRepaintContractTest(unittest.TestCase):
         )
 
         erase_body = extract_function(
-            self.source,
+            self.list_ctrl_source,
             "BOOL CListCtrlEx::OnEraseBkgnd(CDC* pDC)",
         )
         erase_body_without_comments = re.sub(r"//.*", "", erase_body)
@@ -49,6 +54,55 @@ class PlaylistRepaintContractTest(unittest.TestCase):
         self.assertNotIn(
             "return CListCtrl::OnEraseBkgnd(pDC);",
             erase_body_without_comments,
+        )
+
+    def test_base_list_requests_and_handles_control_postpaint(self):
+        custom_draw_body = extract_function(
+            self.list_ctrl_source,
+            "void CListCtrlEx::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)",
+        )
+        self.assertRegex(
+            custom_draw_body,
+            re.compile(
+                r"case CDDS_PREPAINT:\s*"
+                r"\*pResult = CDRF_NOTIFYITEMDRAW\s*\|\s*"
+                r"CDRF_NOTIFYPOSTPAINT;"
+            ),
+        )
+        self.assertRegex(
+            custom_draw_body,
+            re.compile(
+                r"case CDDS_POSTPAINT:\s*"
+                r"FillEmptyListArea\(CDC::FromHandle\(nmcd\.hdc\)\);\s*"
+                r"break;"
+            ),
+        )
+
+    def test_empty_list_area_starts_after_last_item_and_is_filled(self):
+        self.assertIn(
+            "void FillEmptyListArea(CDC* pDC);",
+            self.list_ctrl_header,
+        )
+        self.assertIn(
+            "void CListCtrlEx::FillEmptyListArea(CDC* pDC)",
+            self.list_ctrl_source,
+        )
+        fill_body = extract_function(
+            self.list_ctrl_source,
+            "void CListCtrlEx::FillEmptyListArea(CDC* pDC)",
+        )
+        self.assertRegex(
+            fill_body,
+            re.compile(
+                r"GetClientRect\(empty_rect\);.*"
+                r"GetItemRect\(item_count - 1,\s*last_item_rect,\s*"
+                r"LVIR_BOUNDS\).*"
+                r"empty_rect\.top = std::clamp\(\s*"
+                r"last_item_rect\.bottom,\s*empty_rect\.top,\s*"
+                r"empty_rect\.bottom\s*\);.*"
+                r"FillSolidRect\(empty_rect,\s*m_background_color\);",
+                re.DOTALL,
+            ),
         )
 
 

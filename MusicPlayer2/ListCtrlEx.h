@@ -49,6 +49,7 @@ public:
 
 protected:
     bool IsRowSelected(int row);
+    void FillEmptyListArea(CDC* pDC);
 
 protected:
     const ColorTable& m_theme_color;
@@ -80,4 +81,3 @@ public:
 protected:
     afx_msg LRESULT OnTabletQuerysystemgesturestatus(WPARAM wParam, LPARAM lParam);
 };
-

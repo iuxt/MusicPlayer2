@@ -267,6 +267,31 @@ wstring CListCtrlEx::GetAllText(const wchar_t* sperator /*= L"\t"*/)
     return str_result;
 }
 
+void CListCtrlEx::FillEmptyListArea(CDC* pDC)
+{
+    if (pDC == nullptr)
+        return;
+
+    CRect empty_rect;
+    GetClientRect(empty_rect);
+    const int item_count{ GetItemCount() };
+    if (item_count > 0)
+    {
+        CRect last_item_rect;
+        if (GetItemRect(item_count - 1, last_item_rect, LVIR_BOUNDS))
+        {
+            empty_rect.top = std::clamp(
+                last_item_rect.bottom,
+                empty_rect.top,
+                empty_rect.bottom
+            );
+        }
+    }
+
+    if (!empty_rect.IsRectEmpty())
+        pDC->FillSolidRect(empty_rect, m_background_color);
+}
+
 bool CListCtrlEx::IsRowSelected(int row)
 {
     DWORD ex_style = GetExtendedStyle();
@@ -308,7 +333,7 @@ void CListCtrlEx::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
     switch (lplvdr->nmcd.dwDrawStage)	//判断状态   
     {
     case CDDS_PREPAINT:
-        *pResult = CDRF_NOTIFYITEMDRAW;
+        *pResult = CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
         break;
     case CDDS_ITEMPREPAINT:			//如果为画ITEM之前就要进行颜色的改变
         this_item_select = false;
@@ -397,6 +422,9 @@ void CListCtrlEx::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
         }
 
         //*pResult = CDRF_DODEFAULT;
+        break;
+    case CDDS_POSTPAINT:
+        FillEmptyListArea(CDC::FromHandle(nmcd.hdc));
         break;
     }
 }
