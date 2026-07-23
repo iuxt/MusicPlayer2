@@ -392,6 +392,7 @@ void CListCtrlEx::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
         *pResult = CDRF_NOTIFYPOSTPAINT;
         break;
     case CDDS_ITEMPOSTPAINT:
+    {
         if (this_item_select)
             SetItemState(nmcd.dwItemSpec, 0xFF, LVIS_SELECTED);
         //用背景色填充单元格左侧的空白区域
@@ -423,6 +424,7 @@ void CListCtrlEx::OnNMCustomdraw(NMHDR *pNMHDR, LRESULT *pResult)
 
         //*pResult = CDRF_DODEFAULT;
         break;
+    }
     case CDDS_POSTPAINT:
         FillEmptyListArea(CDC::FromHandle(nmcd.hdc));
         break;
