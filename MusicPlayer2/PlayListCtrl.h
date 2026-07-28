@@ -28,7 +28,7 @@ public:
 protected:
 
     CToolTipCtrl m_toolTip;		//文本提示类
-    int m_nItem;				//存放行号
+    int m_nItem{ -1 };				//存放行号
     //int m_nSubItem;			//存放列号
 
     const vector<SongInfo>& m_all_song_info;		//储存播放列表中所有歌曲的信息
@@ -38,6 +38,7 @@ protected:
 
 protected:
     void CalculateColumeWidth(vector<int>& width);
+    void UpdateToolTipText(const CString& text);
 
     afx_msg void OnMouseMove(UINT nFlags, CPoint point);
     virtual BOOL PreTranslateMessage(MSG* pMsg);

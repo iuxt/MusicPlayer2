@@ -23,6 +23,8 @@ CPlayListCtrl::~CPlayListCtrl()
 
 void CPlayListCtrl::ShowPlaylist(DisplayFormat display_format, bool search_result)
 {
+    m_nItem = -1;
+    m_toolTip.Pop();
     m_searched = search_result;
     m_list_data.clear();
     if (m_all_song_info.size() == 1 && m_all_song_info[0].file_path.empty())
@@ -106,6 +108,15 @@ void CPlayListCtrl::ShowPopupMenu(CMenu* pMenu, int item_index, CWnd* pWnd)
     CListCtrlEx::ShowPopupMenu(pMenu, item_index, pWnd);
 }
 
+void CPlayListCtrl::UpdateToolTipText(const CString& text)
+{
+    if (m_toolTip.GetToolCount() == 0)
+        m_toolTip.AddTool(this, text);
+    else
+        m_toolTip.UpdateTipText(text, this);
+    m_toolTip.Pop();
+}
+
 void CPlayListCtrl::AdjustColumnWidth()
 {
     vector<int> width;
@@ -165,18 +176,20 @@ void CPlayListCtrl::OnMouseMove(UINT nFlags, CPoint point)
             // 如果鼠标移动到一个合法的行，则显示新的提示信息，否则不显示提示
             if (m_nItem >= 0 && m_nItem < static_cast<int>(m_all_song_info.size()) && !m_dragging)
             {
-                int song_index;
+                int song_index{ -1 };
                 if (!m_searched)
                 {
                     song_index = m_nItem;
                 }
-                else
+                else if (m_nItem < static_cast<int>(m_search_result.size()))
                 {
-                    CString str = GetItemText(m_nItem, 0);
-                    song_index = _ttoi(str) - 1;
+                    song_index = m_search_result[m_nItem];
                 }
                 if (song_index < 0 || song_index >= static_cast<int>(m_all_song_info.size()))
+                {
+                    UpdateToolTipText(_T(""));
                     return;
+                }
 
                 CString dis_str = GetItemText(m_nItem, 1);
                 int strWidth = GetStringWidth(dis_str) + theApp.DPI(10);		//获取要显示当前字符串的最小宽度
@@ -187,20 +200,17 @@ void CPlayListCtrl::OnMouseMove(UINT nFlags, CPoint point)
 
                 m_toolTip.SetMaxTipWidth(theApp.DPI(400));		//设置提示信息的宽度，以支持提示换行
 
-                m_toolTip.AddTool(this, str_tip);
-                m_toolTip.Pop();			// 显示提示框
+                UpdateToolTipText(str_tip);
             }
             else
             {
-                m_toolTip.AddTool(this, _T(""));
-                m_toolTip.Pop();
+                UpdateToolTipText(_T(""));
             }
         }
     }
     else
     {
-        m_toolTip.AddTool(this, _T(""));
-        m_toolTip.Pop();
+        UpdateToolTipText(_T(""));
     }
     CListCtrlEx::OnMouseMove(nFlags, point);
 }
