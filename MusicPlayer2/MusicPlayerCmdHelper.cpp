@@ -265,6 +265,8 @@ bool CMusicPlayerCmdHelper::DeleteSongsFromDisk(const std::vector<SongInfo>& fil
         CPlayer::GetInstance().MusicControl(Command::STOP);
         CPlayer::GetInstance().MusicControl(Command::CLOSE);
         CPlayer::GetInstance().GetPlayStatusMutex().unlock();
+        // CLOSE 不会释放已加载的封面/歌词对象，这里必须显式释放，否则在线下载的封面文件仍被 m_album_cover 锁住、导致关联文件删不掉
+        CPlayer::GetInstance().ClearAlbumCoverAndLyric();
     }
     int rtn{};
     rtn = CommonDialogMgr::DeleteFiles(GetOwner()->m_hWnd, delected_files);

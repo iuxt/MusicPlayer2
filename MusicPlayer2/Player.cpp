@@ -2578,6 +2578,18 @@ void CPlayer::SearchOutAlbumCover()
     MediaTransControlsLoadThumbnail();
 }
 
+void CPlayer::ClearAlbumCoverAndLyric()
+{
+    // 销毁已加载的封面/歌词对象，释放对封面文件的占用（CImage::Load 会锁文件直到 Destroy）。
+    // 用于从磁盘删除当前播放歌曲前：Command::CLOSE 只关闭音频，不会释放这些对象，
+    // 若不显式释放，在线下载的封面文件会一直被 m_album_cover 锁住，导致 SHFileOperation 删除关联文件失败。
+    CSingleLock sync(&m_album_cover_sync, TRUE);
+    m_album_cover.Destroy();
+    m_album_cover_blur.Destroy();
+    m_Lyrics = CLyrics();
+    m_album_cover_path.clear();
+}
+
 bool CPlayer::IsOsuFile() const
 {
     return m_is_osu;

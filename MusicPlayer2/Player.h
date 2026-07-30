@@ -521,6 +521,9 @@ private:
 public:
     //查找匹配的外部专辑封面，并加载专辑封面
     void SearchOutAlbumCover();
+    //销毁已加载的专辑封面和歌词对象（释放对封面文件的占用）。
+    //从磁盘删除当前播放的歌曲前调用：CLOSE 不会释放这些对象，若不显式释放，在线下载的封面文件会因被 m_album_cover 锁住而无法删除。
+    void ClearAlbumCoverAndLyric();
     //专辑封面高斯模糊
     void AlbumCoverGaussBlur();
     wstring GetCurrentFileType() { return m_current_file_type; }
